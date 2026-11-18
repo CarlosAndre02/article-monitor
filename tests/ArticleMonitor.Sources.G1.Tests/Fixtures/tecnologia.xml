@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Synthetic fixture with the structure of the g1 technology RSS feed (own text, no g1 content). -->
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+  <channel>
+    <title>g1 &gt; Tecnologia</title>
+    <link>https://g1.globo.com/tecnologia/</link>
+    <description>Fixture sintética do feed de tecnologia.</description>
+    <language>pt-BR</language>
+    <atom:link href="https://g1.globo.com/rss/g1/tecnologia/" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Empresa fictícia lança chip para inteligência artificial</title>
+      <atom:subtitle>Processador fictício promete consumir metade da energia.</atom:subtitle>
+      <link>https://g1.globo.com/tecnologia/noticia/2026/11/10/empresa-ficticia-lanca-chip.ghtml</link>
+      <guid isPermaLink="true">https://g1.globo.com/tecnologia/noticia/2026/11/10/empresa-ficticia-lanca-chip.ghtml</guid>
+      <description><![CDATA[<img src="https://s2-g1.glbimg.com/exemplo-chip.jpg" /><br />Processador fictício.]]></description>
+      <media:content url="https://s2-g1.glbimg.com/exemplo-chip.jpg" medium="image"/>
+      <category>G1</category>
+      <pubDate>Tue, 10 Nov 2026 15:38:01 -0000</pubDate>
+    </item>
+    <item>
+      <title>Aplicativo fictício ganha recurso de tradução simultânea</title>
+      <atom:subtitle>Função fictícia chega primeiro para usuários de celular.</atom:subtitle>
+      <link>https://g1.globo.com/tecnologia/noticia/2026/11/05/aplicativo-ficticio-traducao.ghtml</link>
+      <guid isPermaLink="true">https://g1.globo.com/tecnologia/noticia/2026/11/05/aplicativo-ficticio-traducao.ghtml</guid>
+      <description><![CDATA[Função fictícia chega primeiro ao celular.]]></description>
+      <category>G1</category>
+      <pubDate>Thu, 05 Nov 2026 11:15:00 -0000</pubDate>
+    </item>
+  </channel>
+</rss>

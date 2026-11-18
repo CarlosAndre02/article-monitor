@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <UserSecretsId>ca8fc6ed-41ef-406c-aa5d-a069f6ee611c</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ArticleMonitor.Application\ArticleMonitor.Application.csproj" />
+    <ProjectReference Include="..\ArticleMonitor.Infrastructure\ArticleMonitor.Infrastructure.csproj" />
+    <ProjectReference Include="..\ArticleMonitor.Sources.Common\ArticleMonitor.Sources.Common.csproj" />
+    <ProjectReference Include="..\ArticleMonitor.Sources.G1\ArticleMonitor.Sources.G1.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ArticleMonitor.UnitTests" />
+  </ItemGroup>
+
+</Project>

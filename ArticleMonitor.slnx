@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ArticleMonitor.Application/ArticleMonitor.Application.csproj" />
+    <Project Path="src/ArticleMonitor.Domain/ArticleMonitor.Domain.csproj" />
+    <Project Path="src/ArticleMonitor.Infrastructure/ArticleMonitor.Infrastructure.csproj" />
+    <Project Path="src/ArticleMonitor.Sources.Common/ArticleMonitor.Sources.Common.csproj" />
+    <Project Path="src/ArticleMonitor.Sources.G1/ArticleMonitor.Sources.G1.csproj" />
+    <Project Path="src/ArticleMonitor.Worker/ArticleMonitor.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ArticleMonitor.IntegrationTests/ArticleMonitor.IntegrationTests.csproj" />
+    <Project Path="tests/ArticleMonitor.Sources.G1.Tests/ArticleMonitor.Sources.G1.Tests.csproj" />
+    <Project Path="tests/ArticleMonitor.Sources.Testing/ArticleMonitor.Sources.Testing.csproj" />
+    <Project Path="tests/ArticleMonitor.UnitTests/ArticleMonitor.UnitTests.csproj" />
+  </Folder>
+</Solution>

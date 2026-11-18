@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Synthetic fixture with the structure of the g1 politics RSS feed (own text, no g1 content). -->
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+  <channel>
+    <title>g1 &gt; Política</title>
+    <link>https://g1.globo.com/politica/</link>
+    <description>Fixture sintética do feed de política.</description>
+    <language>pt-BR</language>
+    <atom:link href="https://g1.globo.com/rss/g1/politica/" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Senado aprova projeto fictício sobre transparência de dados</title>
+      <atom:subtitle>Texto fictício segue para sanção e prevê relatórios trimestrais.</atom:subtitle>
+      <link>https://g1.globo.com/politica/noticia/2026/11/10/senado-aprova-projeto-ficticio.ghtml</link>
+      <guid isPermaLink="true">https://g1.globo.com/politica/noticia/2026/11/10/senado-aprova-projeto-ficticio.ghtml</guid>
+      <description><![CDATA[<img src="https://s2-g1.glbimg.com/exemplo-plenario.jpg" /><br />Texto fictício segue para sanção.]]></description>
+      <media:content url="https://s2-g1.glbimg.com/exemplo-plenario.jpg" medium="image"/>
+      <category>G1</category>
+      <pubDate>Tue, 10 Nov 2026 14:53:47 -0000</pubDate>
+    </item>
+    <item>
+      <title>Comissão fictícia adia votação de reforma administrativa</title>
+      <atom:subtitle>Relator pediu mais prazo para analisar emendas fictícias.</atom:subtitle>
+      <link>https://g1.globo.com/politica/noticia/2026/11/09/comissao-adia-votacao-ficticia.ghtml</link>
+      <guid isPermaLink="true">https://g1.globo.com/politica/noticia/2026/11/09/comissao-adia-votacao-ficticia.ghtml</guid>
+      <description><![CDATA[<img src="https://s2-g1.glbimg.com/exemplo-comissao.jpg" /><br />Relator pediu mais prazo.]]></description>
+      <category>G1</category>
+      <pubDate>Mon, 09 Nov 2026 18:20:00 -0000</pubDate>
+    </item>
+  </channel>
+</rss>
