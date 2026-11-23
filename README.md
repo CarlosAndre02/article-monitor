@@ -34,7 +34,7 @@ dotnet test --project tests/ArticleMonitor.UnitTests --filter-method "*Stops_at_
 
 | Suite | Covers | Needs |
 | --- | --- | --- |
-| `ArticleMonitor.UnitTests` | Domain rules, use cases with fakes of the contracts, robots.txt parsing, scheduler | Nothing |
+| `ArticleMonitor.UnitTests` | Domain rules, URL properties, architecture rules, use cases with fakes of the contracts, robots.txt parsing, scheduler | Nothing |
 | `ArticleMonitor.Sources.G1.Tests` | G1 discovery and extraction on synthetic fixtures, plus the inherited contract tests | Nothing |
 | `ArticleMonitor.IntegrationTests` | Repositories and full collection cycles on SQL Server 2025 | Docker |
 
