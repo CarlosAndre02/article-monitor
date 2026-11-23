@@ -12,6 +12,8 @@ public class CanonicalUrlTests
     [InlineData("https://g1.globo.com:443/a.ghtml", "https://g1.globo.com/a.ghtml")]
     [InlineData("http://g1.globo.com:8080/a", "http://g1.globo.com:8080/a")]
     [InlineData("  https://g1.globo.com/Caminho/Com/Maiusculas  ", "https://g1.globo.com/Caminho/Com/Maiusculas")]
+    [InlineData("https://g1.globo.com/a?b&?c", "https://g1.globo.com/a??c&b")]
+    [InlineData("https://g1.globo.com/a??c&b", "https://g1.globo.com/a??c&b")]
     public void Normalizes_the_url(string raw, string expected)
     {
         Assert.True(CanonicalUrl.TryCreate(raw, out var url));

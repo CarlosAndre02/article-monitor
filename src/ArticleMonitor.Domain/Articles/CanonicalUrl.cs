@@ -71,7 +71,10 @@ public sealed class CanonicalUrl : IEquatable<CanonicalUrl>
 
     private static string NormalizeQuery(string query)
     {
-        var parameters = query.TrimStart('?')
+        if (query.Length == 0) return query;
+
+        // Only the first "?" is the delimiter: any other belongs to the parameters.
+        var parameters = query[1..]
             .Split('&', StringSplitOptions.RemoveEmptyEntries)
             .Where(parameter => !IsTracking(ParameterName(parameter)))
             .Order(StringComparer.Ordinal);
