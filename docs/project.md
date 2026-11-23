@@ -87,6 +87,8 @@ Se a fonte acaba sem nenhuma dessas condições, o motivo é `EndOfSource`.
 
 Exceção lançada por um extrator conta como falha de extração daquele artigo e não interrompe a execução.
 
+**Alerta de conteúdo degradado**: a execução registra um `Warning` quando mais de `ContentAlertRate` dos artigos novos usaram o fallback ou ficaram `LeadOnly`, desde que haja pelo menos `ContentAlertMinArticles` artigos novos. O fallback conta porque, após uma mudança de layout, o extrator genérico ainda devolve texto e o artigo não vira `LeadOnly`.
+
 ### Status da execução e efeito na fonte
 
 | Status | Quando | Efeito na `Source` |

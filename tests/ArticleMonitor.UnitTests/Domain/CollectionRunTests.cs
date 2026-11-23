@@ -80,6 +80,25 @@ public class CollectionRunTests
         Assert.Equal(1, run.LeadOnly);
     }
 
+    [Theory]
+    [InlineData(10, 0, 0, false)]
+    [InlineData(10, 2, 0, false)]
+    [InlineData(10, 3, 0, true)]
+    [InlineData(10, 0, 3, true)]
+    [InlineData(10, 2, 1, true)]
+    [InlineData(4, 4, 0, false)]
+    [InlineData(5, 5, 0, true)]
+    public void Content_is_degraded_above_the_rate_with_enough_articles(
+        int added, int fallbacks, int leadOnly, bool expected)
+    {
+        var run = CollectionRun.Start(1, RunTrigger.Scheduled, StartedAt);
+        for (var i = 0; i < added - leadOnly; i++) run.RecordAdded(ContentStatus.Full);
+        for (var i = 0; i < leadOnly; i++) run.RecordAdded(ContentStatus.LeadOnly);
+        for (var i = 0; i < fallbacks; i++) run.RecordExtractionFallback();
+
+        Assert.Equal(expected, run.HasDegradedContent(minArticles: 5, maxRate: 0.2));
+    }
+
     [Fact]
     public void Truncates_long_error_digests()
     {

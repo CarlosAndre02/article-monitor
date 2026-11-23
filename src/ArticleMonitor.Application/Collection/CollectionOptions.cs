@@ -32,4 +32,12 @@ public sealed class CollectionOptions
     /// <summary>Extracted texts shorter than this trigger the generic fallback extractor.</summary>
     [Range(0, 10_000)]
     public int MinExtractedChars { get; set; } = 200;
+
+    /// <summary>Runs with fewer new articles never raise the content alert: one bad page would be too much.</summary>
+    [Range(1, 10_000)]
+    public int ContentAlertMinArticles { get; set; } = 5;
+
+    /// <summary>Share of new articles missing the source's own extractor above which the run raises an alert.</summary>
+    [Range(0.01, 1.0)]
+    public double ContentAlertRate { get; set; } = 0.2;
 }

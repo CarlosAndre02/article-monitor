@@ -5,6 +5,7 @@ using ArticleMonitor.Application.Pages;
 using ArticleMonitor.Domain.Articles;
 using ArticleMonitor.Domain.Collection;
 using ArticleMonitor.Domain.Sources;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
@@ -19,6 +20,7 @@ public class CollectSourceTests
     private readonly InMemoryArticleRepository _articles = new();
     private readonly InMemoryCollectionRunRepository _runs = new();
     private readonly FakePageFetcher _pages = new();
+    private readonly RecordingLogger<CollectSource> _logger = new();
     private readonly CollectionOptions _options = new() { KnownStreakToStop = 3 };
     private IFallbackContentExtractor _fallback = new PrefixExtractor("fallback:");
 
@@ -213,13 +215,39 @@ public class CollectSourceTests
         Assert.Equal("old-state", source.DiscoveryState);
     }
 
+    [Fact]
+    public async Task Warns_when_the_site_layout_seems_to_have_changed()
+    {
+        string[] slugs = ["a", "b", "c", "d", "e"];
+        foreach (var slug in slugs)
+        {
+            _pages.Serve(Url(slug), PageFetchResult.Fetched("fallback:" + new string('y', 300)));
+        }
+
+        var listing = slugs.Select(slug => Listed(slug, Now)).ToList();
+        await CreateUseCase().ExecuteAsync(NewSource(), Module(listing), RunTrigger.Scheduled, Ct);
+
+        var warning = Assert.Single(_logger.Entries, entry => entry.Level == LogLevel.Warning);
+        Assert.Contains("5 fallbacks", warning.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Does_not_warn_when_the_source_extractor_reads_the_articles()
+    {
+        var listing = new[] { "a", "b", "c", "d", "e" }.Select(slug => Listed(slug, Now)).ToList();
+
+        await CreateUseCase().ExecuteAsync(NewSource(), Module(listing), RunTrigger.Scheduled, Ct);
+
+        Assert.DoesNotContain(_logger.Entries, entry => entry.Level == LogLevel.Warning);
+    }
+
     private CollectSource CreateUseCase()
     {
         var options = Options.Create(_options);
         var reader = new ArticleContentReader(_fallback, options, NullLogger<ArticleContentReader>.Instance);
         var ingestor = new ArticleIngestor(_pages, reader, _articles, _clock);
         var harvester = new SourceHarvester(_articles, ingestor, options, _clock);
-        return new CollectSource(harvester, _runs, new FakeUnitOfWork(), _clock, NullLogger<CollectSource>.Instance);
+        return new CollectSource(harvester, _runs, new FakeUnitOfWork(), _clock, options, _logger);
     }
 
     private static FakeSourceModule Module(

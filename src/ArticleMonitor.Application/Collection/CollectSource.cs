@@ -3,6 +3,7 @@ using ArticleMonitor.Application.Sources;
 using ArticleMonitor.Domain.Collection;
 using ArticleMonitor.Domain.Sources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ArticleMonitor.Application.Collection;
 
@@ -12,6 +13,7 @@ public sealed partial class CollectSource(
     ICollectionRunRepository runs,
     IUnitOfWork unitOfWork,
     TimeProvider clock,
+    IOptions<CollectionOptions> options,
     ILogger<CollectSource> logger)
 {
     public async Task<CollectionRun> ExecuteAsync(
@@ -45,7 +47,16 @@ public sealed partial class CollectSource(
 
         await unitOfWork.SaveChangesAsync(CancellationToken.None);
         LogRunFinished(logger, source.Key.Value, run.Status, run.StopReason, run.Added, run.Duplicates, run.Failures);
+        WarnIfContentDegraded(source, run);
         return run;
+    }
+
+    private void WarnIfContentDegraded(Source source, CollectionRun run)
+    {
+        var alert = options.Value;
+        if (!run.HasDegradedContent(alert.ContentAlertMinArticles, alert.ContentAlertRate)) return;
+
+        LogContentDegraded(logger, source.Key.Value, run.ExtractionFallbacks, run.LeadOnly, run.Added);
     }
 
     private void Complete(Source source, CollectionRun run, HarvestResult harvest)
@@ -62,6 +73,13 @@ public sealed partial class CollectSource(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Collection of {Source} aborted by an unexpected error")]
     private static partial void LogRunAborted(ILogger logger, Exception exception, string source);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Content of {Source} looks degraded: {Fallbacks} fallbacks and {LeadOnly} lead-only in {Added} "
+            + "new articles. The site may have changed its layout or be blocking requests")]
+    private static partial void LogContentDegraded(
+        ILogger logger, string source, int fallbacks, int leadOnly, int added);
 
     [LoggerMessage(
         Level = LogLevel.Information,

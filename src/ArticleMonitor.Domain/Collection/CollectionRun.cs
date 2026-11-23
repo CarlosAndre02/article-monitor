@@ -99,6 +99,13 @@ public sealed class CollectionRun
 
     public void Interrupt(DateTimeOffset finishedAt) => Close(RunStatus.Interrupted, finishedAt);
 
+    /// <summary>
+    /// True when too many new articles were not read by the source's own extractor, the usual sign of a layout
+    /// change or of pages being blocked. Fallbacks count because a layout change may still produce full articles.
+    /// </summary>
+    public bool HasDegradedContent(int minArticles, double maxRate) =>
+        Added >= minArticles && (double)(ExtractionFallbacks + LeadOnly) / Added > maxRate;
+
     private RunStatus DetermineStatus()
     {
         if (Failures == 0) return RunStatus.Succeeded;
