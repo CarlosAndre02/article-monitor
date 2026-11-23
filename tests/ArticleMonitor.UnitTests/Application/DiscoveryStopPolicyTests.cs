@@ -77,6 +77,17 @@ public class DiscoveryStopPolicyTests
     }
 
     [Fact]
+    public void Known_articles_only_count_when_consecutive()
+    {
+        var policy = NewPolicy(knownStreakToStop: 2);
+
+        Assert.Equal(DiscoveryDecision.SkipKnown, policy.Evaluate(Now, isKnown: true));
+        Assert.Equal(DiscoveryDecision.Collect, policy.Evaluate(Now, isKnown: false));
+        Assert.Equal(DiscoveryDecision.SkipKnown, policy.Evaluate(Now, isKnown: true));
+        Assert.Equal(DiscoveryDecision.Collect, policy.Evaluate(Now, isKnown: false));
+    }
+
+    [Fact]
     public void Articles_without_date_are_never_cut_by_age()
     {
         var policy = NewPolicy();
