@@ -62,4 +62,11 @@ public class CanonicalUrlTests
         CanonicalUrl.TryCreate(raw, out var url);
         Assert.Equal(expected, url!.IsOnAnyHost(["g1.globo.com"]));
     }
+
+    [Fact]
+    public void Is_on_the_source_when_any_of_its_hosts_matches()
+    {
+        CanonicalUrl.TryCreate("https://g1.globo.com/a.ghtml", out var url);
+        Assert.True(url!.IsOnAnyHost(["ge.globo.com", "g1.globo.com"]));
+    }
 }

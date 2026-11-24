@@ -80,6 +80,21 @@ public class CollectionCycleTests(SqlServerFixture sql)
     }
 
     [Fact]
+    public async Task A_disabled_source_is_not_collected()
+    {
+        await using var app = await TestApplication.StartAsync(sql, Ct);
+        app.Module.Listing = Listing("a");
+        await app.Cycle.PrepareAsync(Ct);
+        await app.WithDbAsync(db => db.Sources.ExecuteUpdateAsync(
+            setters => setters.SetProperty(source => source.IsEnabled, false), Ct));
+
+        await app.Cycle.RunDueAsync(RunTrigger.CatchUp, Ct);
+
+        Assert.Equal(0, await app.WithDbAsync(db => db.CollectionRuns.CountAsync(Ct)));
+        Assert.Equal(0, await app.WithDbAsync(db => db.Articles.CountAsync(Ct)));
+    }
+
+    [Fact]
     public async Task The_next_scheduled_cycle_skips_articles_already_collected()
     {
         await using var app = await TestApplication.StartAsync(sql, Ct);

@@ -56,6 +56,10 @@ public class CollectionScheduleTests
         Assert.False(EveryFourHours.IsDue(SaoPauloTime(10, 8, 5), SaoPauloTime(10, 11, 59)));
 
     [Fact]
+    public void A_run_started_exactly_at_the_scheduled_time_covers_it() =>
+        Assert.False(EveryFourHours.IsDue(SaoPauloTime(10, 8), SaoPauloTime(10, 8, 1)));
+
+    [Fact]
     public void A_source_becomes_due_when_the_next_scheduled_time_arrives() =>
         Assert.True(EveryFourHours.IsDue(SaoPauloTime(10, 8, 5), SaoPauloTime(10, 12)));
 

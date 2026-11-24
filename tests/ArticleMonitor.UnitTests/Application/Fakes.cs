@@ -27,6 +27,8 @@ internal sealed class ListDiscoverer(
     IReadOnlyList<string>? failures = null,
     string? nextState = "next-state") : IArticleDiscoverer
 {
+    public int Yielded { get; private set; }
+
     public async IAsyncEnumerable<DiscoveredArticle> DiscoverAsync(
         DiscoveryContext context, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -37,9 +39,17 @@ internal sealed class ListDiscoverer(
         {
             cancellationToken.ThrowIfCancellationRequested();
             await Task.Yield();
+            Yielded++;
             yield return article;
         }
     }
+}
+
+internal sealed class ThrowingDiscoverer : IArticleDiscoverer
+{
+    public IAsyncEnumerable<DiscoveredArticle> DiscoverAsync(
+        DiscoveryContext context, CancellationToken cancellationToken) =>
+        throw new InvalidOperationException("Bug.");
 }
 
 /// <summary>Extracts "text:..." pages, fails on anything else.</summary>

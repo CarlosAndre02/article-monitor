@@ -186,10 +186,10 @@ dotnet stryker --test-runner mtp --project ArticleMonitor.Domain.csproj --output
 | `DependencyRuleTests` | **Arquitetura**: cada camada só referencia as permitidas, o Domain só usa a biblioteca base, a Application não usa rede, banco ou biblioteca de site, e um módulo de fonte não depende de outro. Novos módulos entram na verificação sem alterar o teste |
 | `SourceTests` | A marca d'água só avança, uma execução com falha não altera a fonte, e chaves são normalizadas e validadas |
 | `CollectionRunTests` | Ciclo de vida da execução: status final, contadores, resumo de erros truncado, impossibilidade de fechar duas vezes e limite do alerta de conteúdo degradado |
-| `CollectionScheduleTests` | Próximo e último horário, fuso configurado, virada de dia, e vários horários perdidos resultando em uma só coleta |
+| `CollectionScheduleTests` | Próximo e último horário, fuso configurado, virada de dia, execução iniciada exatamente no horário, e vários horários perdidos resultando em uma só coleta |
 | `DiscoveryStopPolicyTests` | Limite de data, sequência de conhecidos, teto de itens, artigos sem data e detecção de possível lacuna |
 | `ArticleContentReaderTests` | Ordem dos extratores: módulo, fallback genérico e falha, incluindo extrator que lança exceção |
-| `CollectSourceTests` | Caso de uso completo com fakes: duplicatas entre feeds, links de outro host, página com erro, robots, falha de um feed, execução interrompida, preservação da marca d'água e emissão do alerta de conteúdo degradado |
+| `CollectSourceTests` | Caso de uso completo com fakes: duplicatas entre feeds, links de outro host, página com erro, robots, falha de um feed, execução interrompida, erro inesperado, fim da leitura da listagem ao parar, preservação da marca d'água e emissão do alerta de conteúdo degradado |
 | `RobotsTxtPolicyTests` | Interpretação do `robots.txt`: regra mais longa vence, `Allow` vence empate, grupos por user-agent e comentários |
 | `CollectionSchedulerTests` | Recuperação ao iniciar, espera pelo próximo horário, máquina suspensa e nova tentativa quando o banco não está pronto |
 
@@ -221,7 +221,7 @@ Usa a composição real da aplicação no SQL Server 2025. Só a fonte, as pági
 | Classe | O que protege |
 | --- | --- |
 | `ArticleRepositoryTests` | Busca de artigos existentes por hash, inserções concorrentes do mesmo artigo e texto íntegro após a compressão Brotli |
-| `CollectionCycleTests` | Registro único dos módulos, execuções presas viram `Interrupted`, ciclo de recuperação completo, nenhuma coleta antes do próximo horário e segundo ciclo sem novos artigos |
+| `CollectionCycleTests` | Registro único dos módulos, execuções presas viram `Interrupted`, ciclo de recuperação completo, fonte desativada, nenhuma coleta antes do próximo horário e segundo ciclo sem novos artigos |
 
 ### Regressões protegidas
 

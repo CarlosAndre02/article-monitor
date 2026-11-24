@@ -216,6 +216,35 @@ public class CollectSourceTests
     }
 
     [Fact]
+    public async Task Stops_reading_the_listing_once_discovery_stops()
+    {
+        _options.MaxItemsPerRun = 1;
+        var listing = Enumerable.Range(0, 60).Select(index => Listed($"a{index}", Now.AddMinutes(-index))).ToList();
+        var discoverer = new ListDiscoverer(listing);
+        var module = new FakeSourceModule(discoverer, new PrefixExtractor());
+
+        await CreateUseCase().ExecuteAsync(NewSource(), module, RunTrigger.Scheduled, Ct);
+
+        Assert.True(discoverer.Yielded < listing.Count, $"Read {discoverer.Yielded} of {listing.Count} items.");
+    }
+
+    [Fact]
+    public async Task An_unexpected_error_fails_the_run_and_keeps_the_source_state()
+    {
+        var source = NewSource(watermark: Now.AddDays(-1), state: "old-state");
+        var module = new FakeSourceModule(new ThrowingDiscoverer(), new PrefixExtractor());
+
+        var run = await CreateUseCase().ExecuteAsync(source, module, RunTrigger.Scheduled, Ct);
+
+        Assert.Equal(RunStatus.Failed, run.Status);
+        Assert.Equal(Now, run.FinishedAt);
+        Assert.Contains("Bug.", run.Errors, StringComparison.Ordinal);
+        Assert.Equal(Now, source.LastCompletedRunStartedAt);
+        Assert.Equal(Now.AddDays(-1), source.Watermark);
+        Assert.Equal("old-state", source.DiscoveryState);
+    }
+
+    [Fact]
     public async Task Warns_when_the_site_layout_seems_to_have_changed()
     {
         string[] slugs = ["a", "b", "c", "d", "e"];
