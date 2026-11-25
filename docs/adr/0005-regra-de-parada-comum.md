@@ -22,7 +22,7 @@ Cada coleta precisa decidir até onde ler a listagem de uma fonte. Ler de menos 
 - Só contam na sequência os conhecidos publicados até a marca d'água, ou sem data, porque a marca d'água só avança quando uma execução é concluída.
 - Quando a execução pode ter perdido artigos, ela é marcada como possível lacuna.
 
-As regras em detalhe estão em [project.md](../project.md#regra-de-parada-da-descoberta).
+As regras em detalhe estão em [features/coleta.md](../features/coleta.md#regra-de-parada-da-descoberta).
 
 ## Alternativas consideradas
 

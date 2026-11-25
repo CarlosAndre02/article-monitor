@@ -13,7 +13,7 @@ O worker roda principalmente numa máquina pessoal, que pode ficar desligada ou 
 - Ao iniciar, uma fonte que perdeu um horário com a máquina desligada coleta uma vez, na hora. Vários horários perdidos viram uma só coleta.
 - O relógio de parede é conferido a cada minuto.
 
-As regras em detalhe estão em [project.md](../project.md#agenda).
+As regras em detalhe estão em [features/coleta.md](../features/coleta.md#1-agenda).
 
 ## Alternativas consideradas
 

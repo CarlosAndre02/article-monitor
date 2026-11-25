@@ -1,6 +1,6 @@
 # Requisitos
 
-O que o article-monitor precisa fazer e por quê. Como cada parte funciona está em [project.md](project.md), e as decisões de arquitetura, com as alternativas descartadas, em [adr/](adr/README.md).
+O que o article-monitor precisa fazer e por quê. Como cada feature funciona está em [features/](features/), o modelo de domínio em [project.md](project.md), e as decisões de arquitetura, com as alternativas descartadas, em [adr/](adr/README.md).
 
 ## Problema
 

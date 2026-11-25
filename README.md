@@ -96,6 +96,7 @@ Existing modules and the core stay untouched, so their tests keep guarding what 
 | --- | --- |
 | [docs/requirements.md](docs/requirements.md) | What the system must do and why: scope, requirements with acceptance criteria, metrics and open decisions |
 | [docs/adr/](docs/adr/README.md) | Architecture decisions, with the alternatives that were discarded |
-| [docs/project.md](docs/project.md) | How it works: domain, business rules and the HTTP pipeline |
+| [docs/features/](docs/features/) | How each feature works: its business rules, step by step in execution order |
+| [docs/project.md](docs/project.md) | Domain model shared by the features: entities, value objects and invariants |
 | [docs/sources.md](docs/sources.md) | How to add a news source |
 | [docs/test.md](docs/test.md) | Test strategy and what each suite protects |

@@ -7,4 +7,5 @@
 - Documentation never records current state or anything else that ages ("currently", "so far", "previously"). Write the rule or the reason, not the snapshot.
   - Exception: `docs/adr/` holds Architecture Decision Records and the analyses behind them. They are dated and immutable; a changed decision gets a new ADR that supersedes the old one, whose status is the only thing updated. Rules are in `docs/adr/README.md`.
 - Record a decision as an ADR when it changes the structure, is costly to reverse and had a real alternative. Requirements live in `docs/requirements.md`.
+- Business rules are documented per feature, one file each in `docs/features/`. A feature file opens with a brief description of what the feature does, the requirements it meets and the ADRs behind it. Then it has one section per execution step, in the order the feature runs, each naming the classes and layer that apply its rules. Rules shared by several steps (e.g. the HTTP pipeline) get their own section at the end. The domain model shared by the features stays in `docs/project.md`.
 - Do not assume anything. Always ask when in doubt.
