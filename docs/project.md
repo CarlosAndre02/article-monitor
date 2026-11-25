@@ -88,6 +88,8 @@ Se a fonte acaba sem nenhuma dessas condições, o motivo é `EndOfSource`.
 
 Exceção lançada por um extrator conta como falha de extração daquele artigo e não interrompe a execução.
 
+O texto é gravado comprimido com Brotli pela aplicação ([ADR 0006](adr/0006-matching-na-aplicacao.md)).
+
 **Alerta de conteúdo degradado**: a execução registra um `Warning` quando mais de `ContentAlertRate` dos artigos novos usaram o fallback ou ficaram `LeadOnly`, desde que haja pelo menos `ContentAlertMinArticles` artigos novos. O fallback conta porque, após uma mudança de layout, o extrator genérico ainda devolve texto e o artigo não vira `LeadOnly`.
 
 ### Status da execução e efeito na fonte
@@ -107,6 +109,9 @@ O início da última execução concluída (`LastCompletedRunStartedAt`) decide 
 - **Ao iniciar**: execuções presas em `Running` viram `Interrupted`, módulos sem linha no banco são registrados e as fontes devidas são coletadas (`CatchUp`).
 - **Checagem**: o relógio de parede é conferido a cada minuto. Timers longos param de contar com a máquina suspensa e disparariam atrasados.
 - **Ciclo com falha**: um ciclo que falha inteiro (banco fora do ar, por exemplo) é tentado de novo no minuto seguinte.
+- **Paralelismo**: as fontes devidas são coletadas em paralelo, até `MaxConcurrentSources`. Dentro de uma fonte, a coleta é sequencial, porque o rate limit vale por host.
+
+Por que a agenda é global e em horários fixos: [ADR 0003](adr/0003-agenda-global-com-recuperacao.md).
 
 ## Cliente HTTP e pipeline de resiliência
 

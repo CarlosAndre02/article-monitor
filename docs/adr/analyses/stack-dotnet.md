@@ -1,6 +1,6 @@
 # Avaliação: stack .NET (C#, ASP.NET Core, SQL Server)
 
-Viabilidade de engenharia e custo do article-monitor numa stack .NET, a partir das premissas de [project.md](project.md). Preços e limites consultados em 2026-11-08; links em [Fontes](#fontes).
+Viabilidade de engenharia e custo do article-monitor numa stack .NET, a partir das premissas de [requirements.md](../../requirements.md). Preços e limites consultados em 2026-11-08; links em [Fontes](#fontes).
 
 ## Conclusão
 

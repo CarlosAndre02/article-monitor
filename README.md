@@ -89,3 +89,13 @@ Each source is an isolated module (a `Sources/<Name>` folder, namespace `Article
 3. One registration line in the Worker.
 
 Existing modules and the core stay untouched, so their tests keep guarding what already works. Modules share one project so the number of projects does not grow with the sources; an architecture test, instead of the compiler, fails when a module uses another one. Robots.txt, rate limiting and resilience live in the shared HTTP pipeline, so no module can bypass them. Details in [docs/sources.md](docs/sources.md).
+
+## Documentation
+
+| Document | Content |
+| --- | --- |
+| [docs/requirements.md](docs/requirements.md) | What the system must do and why: scope, requirements with acceptance criteria, metrics and open decisions |
+| [docs/adr/](docs/adr/README.md) | Architecture decisions, with the alternatives that were discarded |
+| [docs/project.md](docs/project.md) | How it works: domain, business rules and the HTTP pipeline |
+| [docs/sources.md](docs/sources.md) | How to add a news source |
+| [docs/test.md](docs/test.md) | Test strategy and what each suite protects |
