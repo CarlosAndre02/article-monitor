@@ -78,13 +78,35 @@ public class CollectSourceTests
             Listed("d", Now.AddHours(-4)), Listed("e", Now.AddHours(-5)),
         ]);
 
-        var run = await CreateUseCase().ExecuteAsync(NewSource(), module, RunTrigger.Scheduled, Ct);
+        var source = NewSource(watermark: Now.AddHours(-2));
+
+        var run = await CreateUseCase().ExecuteAsync(source, module, RunTrigger.Scheduled, Ct);
 
         Assert.Equal(StopReason.ReachedKnownItems, run.StopReason);
         Assert.Equal(4, run.Discovered);
         Assert.Equal(1, run.Added);
         Assert.Equal(3, run.Duplicates);
         Assert.Equal([new Uri(Url("a"))], _pages.Requested);
+    }
+
+    [Fact]
+    public async Task Collects_what_an_unfinished_run_left_behind()
+    {
+        // The unfinished run stored a, b and c, then stopped before reaching d and e.
+        _articles.Seed(Url("a"), Url("b"), Url("c"), Url("f"), Url("g"));
+        var module = Module(
+        [
+            Listed("a", Now.AddHours(-1)), Listed("b", Now.AddHours(-2)), Listed("c", Now.AddHours(-3)),
+            Listed("d", Now.AddHours(-4)), Listed("e", Now.AddHours(-5)),
+            Listed("f", Now.AddHours(-6)), Listed("g", Now.AddHours(-7)),
+        ]);
+        var source = NewSource(watermark: Now.AddHours(-6));
+
+        var run = await CreateUseCase().ExecuteAsync(source, module, RunTrigger.CatchUp, Ct);
+
+        Assert.Equal([new Uri(Url("d")), new Uri(Url("e"))], _pages.Requested);
+        Assert.Equal(2, run.Added);
+        Assert.False(run.PossibleGap);
     }
 
     [Fact]

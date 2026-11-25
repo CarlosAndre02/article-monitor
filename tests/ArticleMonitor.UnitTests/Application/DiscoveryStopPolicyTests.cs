@@ -10,6 +10,9 @@ public class DiscoveryStopPolicyTests
     private static readonly DateTimeOffset Now = new(2026, 11, 10, 12, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset LowerBound = Now.AddDays(-2);
 
+    // Articles at or before it were collected by completed runs.
+    private static readonly DateTimeOffset Watermark = Now;
+
     [Fact]
     public void First_run_looks_back_the_initial_lookback()
     {
@@ -88,6 +91,37 @@ public class DiscoveryStopPolicyTests
     }
 
     [Fact]
+    public void Known_articles_newer_than_the_watermark_do_not_count_towards_the_streak()
+    {
+        var policy = new DiscoveryStopPolicy(LowerBound, Now.AddHours(-3), knownStreakToStop: 2, maxItems: 100);
+
+        Assert.Equal(DiscoveryDecision.SkipKnown, policy.Evaluate(Now.AddHours(-1), isKnown: true));
+        Assert.Equal(DiscoveryDecision.SkipKnown, policy.Evaluate(Now.AddHours(-2), isKnown: true));
+        Assert.Equal(DiscoveryDecision.Collect, policy.Evaluate(Now.AddHours(-2.5), isKnown: false));
+        Assert.Equal(DiscoveryDecision.SkipKnown, policy.Evaluate(Now.AddHours(-3), isKnown: true));
+        Assert.Equal(DiscoveryDecision.SkipKnown, policy.Evaluate(Now.AddHours(-4), isKnown: true));
+        Assert.Equal(DiscoveryDecision.Stop, policy.Evaluate(Now.AddHours(-5), isKnown: false));
+    }
+
+    [Fact]
+    public void Without_a_completed_run_known_articles_do_not_stop_discovery()
+    {
+        var policy = NewPolicy(hasHistory: false, knownStreakToStop: 1);
+
+        Assert.Equal(DiscoveryDecision.SkipKnown, policy.Evaluate(Now, isKnown: true));
+        Assert.Equal(DiscoveryDecision.Collect, policy.Evaluate(Now.AddHours(-1), isKnown: false));
+    }
+
+    [Fact]
+    public void Known_articles_without_date_count_towards_the_streak()
+    {
+        var policy = NewPolicy(knownStreakToStop: 1);
+
+        Assert.Equal(DiscoveryDecision.SkipKnown, policy.Evaluate(publishedAt: null, isKnown: true));
+        Assert.Equal(DiscoveryDecision.Stop, policy.Evaluate(publishedAt: null, isKnown: false));
+    }
+
+    [Fact]
     public void Articles_without_date_are_never_cut_by_age()
     {
         var policy = NewPolicy();
@@ -127,6 +161,16 @@ public class DiscoveryStopPolicyTests
     }
 
     [Fact]
+    public void Running_out_of_items_after_reaching_only_unfinished_ones_flags_a_possible_gap()
+    {
+        var policy = new DiscoveryStopPolicy(LowerBound, Now.AddHours(-3), knownStreakToStop: 5, maxItems: 100);
+        policy.Evaluate(Now.AddHours(-1), isKnown: true);
+        policy.Evaluate(Now.AddHours(-2), isKnown: false);
+
+        Assert.Equal(new DiscoveryOutcome(StopReason.EndOfSource, PossibleGap: true), policy.Complete());
+    }
+
+    [Fact]
     public void Unchanged_sources_are_no_gap()
     {
         var policy = NewPolicy(hasHistory: true);
@@ -146,7 +190,7 @@ public class DiscoveryStopPolicyTests
 
     private static DiscoveryStopPolicy NewPolicy(
         bool hasHistory = true, int knownStreakToStop = 5, int maxItems = 100) =>
-        new(LowerBound, hasHistory, knownStreakToStop, maxItems);
+        new(LowerBound, hasHistory ? Watermark : null, knownStreakToStop, maxItems);
 
     private static Source SourceWithWatermark(DateTimeOffset watermark)
     {

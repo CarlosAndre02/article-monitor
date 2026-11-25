@@ -187,9 +187,9 @@ dotnet stryker --test-runner mtp --project ArticleMonitor.Domain.csproj --output
 | `SourceTests` | A marca d'água só avança, uma execução com falha não altera a fonte, e chaves são normalizadas e validadas |
 | `CollectionRunTests` | Ciclo de vida da execução: status final, contadores, resumo de erros truncado, impossibilidade de fechar duas vezes e limite do alerta de conteúdo degradado |
 | `CollectionScheduleTests` | Próximo e último horário, fuso configurado, virada de dia, execução iniciada exatamente no horário, e vários horários perdidos resultando em uma só coleta |
-| `DiscoveryStopPolicyTests` | Limite de data, sequência de conhecidos, teto de itens, artigos sem data e detecção de possível lacuna |
+| `DiscoveryStopPolicyTests` | Limite de data, sequência de conhecidos (só os cobertos por execuções concluídas), teto de itens, artigos sem data e detecção de possível lacuna |
 | `ArticleContentReaderTests` | Ordem dos extratores: módulo, fallback genérico e falha, incluindo extrator que lança exceção |
-| `CollectSourceTests` | Caso de uso completo com fakes: duplicatas entre feeds, links de outro host, página com erro, robots, falha de um feed, execução interrompida, erro inesperado, fim da leitura da listagem ao parar, preservação da marca d'água e emissão do alerta de conteúdo degradado |
+| `CollectSourceTests` | Caso de uso completo com fakes: duplicatas entre feeds, links de outro host, página com erro, robots, falha de um feed, execução interrompida, erro inesperado, fim da leitura da listagem ao parar, coleta do que uma execução não concluída deixou para trás, preservação da marca d'água e emissão do alerta de conteúdo degradado |
 | `RobotsTxtPolicyTests` | Interpretação do `robots.txt`: regra mais longa vence, `Allow` vence empate, grupos por user-agent e comentários |
 | `CollectionSchedulerTests` | Recuperação ao iniciar, espera pelo próximo horário, máquina suspensa e nova tentativa quando o banco não está pronto |
 
@@ -232,6 +232,7 @@ Usa a composição real da aplicação no SQL Server 2025. Só a fonte, as pági
 | Campos internos serializados no estado de descoberta | `Saves_only_the_http_validators_in_the_state` |
 | Remoção de todos os `?` iniciais da query, que daria identidades diferentes à mesma URL ao normalizar de novo | `Normalizing_twice_gives_the_same_url` e `Normalizes_the_url` |
 | Artigos conhecidos não consecutivos encerrando a descoberta antes da hora | `Known_articles_only_count_when_consecutive` |
+| Execução seguinte parando nos artigos gravados por uma execução interrompida e perdendo os mais antigos que ela não alcançou | `Collects_what_an_unfinished_run_left_behind` |
 
 ### Monitoramento da extração
 

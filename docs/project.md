@@ -60,6 +60,7 @@ A `DiscoveryStopPolicy` avalia os itens na ordem em que o discoverer entrega, do
 
 1. **Teto**: atingiu `MaxItemsPerRun` → para (`ReachedItemCap`).
 2. **Sequência de conhecidos**: os últimos `KnownStreakToStop` itens já estavam no banco → para (`ReachedKnownItems`). Uma sequência, e não um único item, tolera matérias antigas fixadas no topo.
+   Só contam os conhecidos publicados até a marca d'água, ou sem data. Um conhecido mais novo que a marca d'água pode ter sido gravado por uma execução que não terminou, e parar nele deixaria para trás os artigos mais antigos que ela não alcançou.
 3. **Limite de data**: item publicado antes do limite inferior → para (`ReachedLowerBound`). Itens sem data nunca param por idade.
 
 O limite inferior é:
@@ -69,7 +70,7 @@ O limite inferior é:
 
 Se a fonte acaba sem nenhuma dessas condições, o motivo é `EndOfSource`.
 
-**Possível lacuna** (`PossibleGap`): a execução fica marcada quando parou no teto, ou quando a fonte acabou sem chegar a nada coletado antes. A segunda condição só vale com marca d'água e com pelo menos um item avaliado. Em ambos os casos pode haver artigos perdidos entre esta execução e a anterior.
+**Possível lacuna** (`PossibleGap`): a execução fica marcada quando parou no teto, ou quando a fonte acabou sem chegar a nada coletado por uma execução concluída. A segunda condição só vale com marca d'água e com pelo menos um item avaliado. Em ambos os casos pode haver artigos perdidos entre esta execução e a anterior.
 
 ### Marca d'água e estado da descoberta
 

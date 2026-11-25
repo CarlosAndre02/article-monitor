@@ -19,7 +19,7 @@ public sealed record DiscoveryOutcome(StopReason StopReason, bool PossibleGap);
 /// </summary>
 public sealed class DiscoveryStopPolicy
 {
-    private readonly bool _hasHistory;
+    private readonly DateTimeOffset? _watermark;
     private readonly int _knownStreakToStop;
     private readonly int _maxItems;
     private int _evaluated;
@@ -27,13 +27,14 @@ public sealed class DiscoveryStopPolicy
     private int _knownStreak;
     private StopReason? _stopReason;
 
-    public DiscoveryStopPolicy(DateTimeOffset lowerBound, bool hasHistory, int knownStreakToStop, int maxItems)
+    public DiscoveryStopPolicy(
+        DateTimeOffset lowerBound, DateTimeOffset? watermark, int knownStreakToStop, int maxItems)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(knownStreakToStop, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(maxItems, 1);
 
         LowerBound = lowerBound;
-        _hasHistory = hasHistory;
+        _watermark = watermark;
         _knownStreakToStop = knownStreakToStop;
         _maxItems = maxItems;
     }
@@ -53,7 +54,7 @@ public sealed class DiscoveryStopPolicy
 
         return new DiscoveryStopPolicy(
             preferred > oldestAllowed ? preferred : oldestAllowed,
-            hasHistory: source.Watermark is not null,
+            source.Watermark,
             options.KnownStreakToStop,
             options.MaxItemsPerRun);
     }
@@ -76,6 +77,8 @@ public sealed class DiscoveryStopPolicy
             return DiscoveryDecision.Collect;
         }
 
+        if (!IsCoveredByCompletedRuns(publishedAt)) return DiscoveryDecision.SkipKnown;
+
         _knownSeen++;
         _knownStreak++;
         return DiscoveryDecision.SkipKnown;
@@ -94,9 +97,16 @@ public sealed class DiscoveryStopPolicy
         StopReason.ReachedItemCap => true,
 
         // The source ran out before reaching anything collected before: articles in between may be lost.
-        StopReason.EndOfSource => _hasHistory && _evaluated > 0 && _knownSeen == 0,
+        StopReason.EndOfSource => _watermark is not null && _evaluated > 0 && _knownSeen == 0,
         _ => false,
     };
+
+    /// <summary>
+    /// A known article newer than the watermark may have been stored by a run that did not finish, which may have
+    /// left older articles behind; stopping on it would skip them for good. Undated articles cannot be told apart.
+    /// </summary>
+    private bool IsCoveredByCompletedRuns(DateTimeOffset? publishedAt) =>
+        publishedAt is null || (_watermark is { } watermark && publishedAt <= watermark);
 
     private DiscoveryDecision StopWith(StopReason reason)
     {
