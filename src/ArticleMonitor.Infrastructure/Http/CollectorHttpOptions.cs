@@ -19,6 +19,13 @@ public sealed class CollectorHttpOptions
     [Range(1024, 50L * 1024 * 1024)]
     public long MaxResponseBytes { get; set; } = 5L * 1024 * 1024;
 
+    /// <summary>
+    /// Limit for article pages, below <see cref="MaxResponseBytes"/>: parsing pathological HTML costs time that grows
+    /// faster than the page size, and extraction cannot be cancelled.
+    /// </summary>
+    [Range(1024, 50L * 1024 * 1024)]
+    public long MaxArticlePageBytes { get; set; } = 2L * 1024 * 1024;
+
     [Range(typeof(TimeSpan), "00:01:00", "7.00:00:00")]
     public TimeSpan RobotsTxtCacheDuration { get; set; } = TimeSpan.FromDays(1);
 

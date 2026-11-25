@@ -30,6 +30,8 @@ Critérios de aceite:
 - Cada execução por fonte fica registrada: status, artigos novos, motivo de parada e erros. Sem isso, um feed quebrado ou um extrator que parou de funcionar passa despercebido.
 - Uma execução que pode ter perdido artigos fica marcada como possível lacuna.
 - A coleta respeita o `robots.txt` e o rate limit por domínio e se identifica pelo User-Agent.
+- A coleta só acessa as fontes por HTTPS e nunca acessa endereços da rede local, nem quando uma fonte redireciona para eles. As URLs vêm de fora, e uma fonte comprometida não pode usar o coletor para ler a máquina ou a rede onde ele roda.
+- Uma fonte com problema não atrapalha a coleta das outras.
 
 ### R2. Fontes
 
@@ -73,6 +75,7 @@ Critérios de aceite:
 - Cada resultado traz link, título, heat, termos que deram match e um trecho curto.
 - Os comandos funcionam sem o intent privilegiado de Message Content.
 - Os nomes dos comandos não conflitam com os de outros bots no mesmo servidor.
+- Título e trecho vêm das fontes sem tratamento, então são texto não confiável. Antes de exibidos, o markdown é escapado e os caracteres de controle e de direção de texto (bidi) são removidos, e as mensagens saem com `allowed_mentions` vazio. Sem isso, uma matéria poderia mencionar `@everyone`, esconder um link atrás de outro texto ou embaralhar a mensagem.
 
 O Discord foi escolhido porque canais e threads organizam o histórico por tema, e slash commands e embeds cobrem a interação. O Telegram não tem canais para essa organização. No WhatsApp, a API oficial é voltada a empresas, e as bibliotecas não oficiais arriscam banimento.
 

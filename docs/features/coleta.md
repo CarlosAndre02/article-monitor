@@ -75,6 +75,8 @@ Se a fonte acaba sem nenhuma dessas condições, o motivo é `EndOfSource`.
 
 Exceção lançada por um extrator conta como falha de extração daquele artigo e não interrompe a execução.
 
+A extração é síncrona e não pode ser cancelada, e HTML patológico (aninhamento muito profundo, por exemplo) custa um tempo que cresce mais rápido que o tamanho da página. Por isso as páginas de artigo têm um limite próprio, menor que o das outras respostas ([Configuração do cliente](#configuração-do-cliente)), e uma extração que leva 2 s ou mais gera um aviso no log com o extrator, a URL e o tamanho do HTML.
+
 ## 4. Gravação
 
 `ArticleIngestor` (Application) e o repositório de artigos (Infrastructure).
@@ -121,9 +123,13 @@ Toda requisição a uma fonte passa pelo cliente nomeado `CollectorHttp.ClientNa
 | Item | Valor | Por quê |
 | --- | --- | --- |
 | `User-Agent` | `Collector:Http:UserAgent` (`produto/versão`) | Identifica o robô; o produto é o token procurado no robots.txt |
-| Tamanho máximo da resposta | `Collector:Http:MaxResponseBytes` | Corta respostas anormais antes de ocupar memória |
+| Tamanho máximo da resposta | `Collector:Http:MaxResponseBytes` | Corta respostas anormais antes de ocupar memória. Vale para o conteúdo já descomprimido, então um gzip bomb também é cortado |
+| Tamanho máximo da página de artigo | `Collector:Http:MaxArticlePageBytes`, aplicado pelo `PageFetcher` | Limita o custo da extração (ver [Leitura do texto](#3-leitura-do-texto)) |
 | Descompressão automática | gzip, deflate e brotli | Algumas fontes (o G1, por exemplo) mandam gzip sem que seja pedido |
 | `PooledConnectionLifetime` | 5 min | Renova conexões e acompanha mudanças de DNS |
+| `AllowAutoRedirect` | desligado | Os redirecionamentos são seguidos pelo `RedirectHandler`, para que cada salto passe pelo pipeline inteiro |
+| `UseProxy` | desligado | Com proxy, o `PublicNetworkConnector` checaria o endereço do proxy, e não o da fonte |
+| `ConnectCallback` | `PublicNetworkConnector` | Só conecta a endereços públicos (ver [Endereços e transporte](#endereços-e-transporte)) |
 
 ### Handlers
 
@@ -131,20 +137,30 @@ Os `DelegatingHandler`s rodam na ordem em que são registrados ([DependencyInjec
 
 ```
 requisição
+  → RedirectHandler       segue até 5 redirecionamentos, mandando cada salto pelos handlers abaixo
+  → HttpsOnlyHandler      recusa tudo que não for HTTPS
   → RobotsTxtHandler      bloqueia caminhos proibidos, antes de qualquer acesso à rede
   → resiliência padrão    timeout total, retry, circuit breaker, timeout por tentativa
   → HostRateLimitHandler  espera a vez do host
-  → SocketsHttpHandler    rede
+  → SocketsHttpHandler    rede, só para endereços públicos
 ```
 
 A ordem tem consequências:
-- O robots.txt é checado uma vez por requisição, não a cada retry.
+- Um redirecionamento é tratado como uma requisição nova: o destino passa pela checagem de HTTPS, pelo robots.txt do host dele e pelo rate limit dele. O destino pode estar em outro host.
+- O robots.txt é checado uma vez por salto, não a cada retry.
 - Cada retry também espera sua vez no host.
 - A espera na fila do rate limiter conta dentro do timeout de 10 s de cada tentativa.
 
 Esse último ponto não pesa porque cada fonte faz uma requisição por vez.
 
-Existe um segundo cliente, `robots`, usado só para baixar o robots.txt. Ele tem resiliência e rate limit, mas não o `RobotsTxtHandler`, que entraria em recursão.
+Existe um segundo cliente, `robots`, usado só para baixar o robots.txt. Ele tem os mesmos handlers, menos o `RobotsTxtHandler`, que entraria em recursão. A RFC 9309 pede que o robots.txt siga pelo menos 5 redirecionamentos.
+
+### Endereços e transporte
+
+Toda URL que o coletor acessa vem de fora: feeds, links das listagens e redirecionamentos. Sem as regras abaixo, uma fonte comprometida poderia apontar o coletor para a própria máquina ou para a rede dela (SSRF), e a resposta seria gravada como artigo.
+
+- **Só HTTPS**: em HTTP, qualquer um no caminho pode alterar o conteúdo, que seria gravado como da fonte. Uma URL `http://` falha antes de qualquer acesso à rede, inclusive como destino de redirecionamento.
+- **Só endereços públicos**: o `PublicNetworkConnector` resolve o DNS e conecta só a endereços fora das faixas de uso especial (loopback, redes privadas, link-local, que inclui o endpoint de metadados das nuvens, CGNAT, multicast e reservadas). Um host sem endereço público falha. A checagem é sobre o endereço efetivamente conectado, então um DNS que muda de resposta entre a validação e a conexão (DNS rebinding) não a contorna.
 
 ### robots.txt
 
@@ -168,7 +184,7 @@ Existe um segundo cliente, `robots`, usado só para baixar o robots.txt. Ele tem
 | Circuit breaker | Abre com ≥ 10% de falhas em 30 s (mínimo de 100 requisições) e fica aberto 5 s | Para de insistir num destino que está caindo |
 | Timeout por tentativa | 10 s | Limite de cada tentativa |
 
-O pipeline é um por cliente, não por host: falhas de um site contam no circuit breaker de todos os sites do cliente `collector`. Com 1 requisição por segundo por host, o mínimo de 100 requisições em 30 s não é atingido com poucas fontes. Com muitas fontes, `.SelectPipelineByAuthority()` separa o pipeline por host.
+O pipeline é um por host (`SelectPipelineByAuthority`), nos dois clientes. Com um pipeline só por cliente, as falhas de um site contariam no circuit breaker de todos: com 4 fontes em paralelo, a 1 requisição por segundo cada, o mínimo de 100 requisições em 30 s é atingido, e um site fora do ar abriria o circuito para os outros. Como um artigo sem página baixada fica `LeadOnly` para sempre, isso perderia o texto de artigos de fontes saudáveis.
 
 ### Rate limit por host
 
@@ -184,6 +200,7 @@ O pipeline é um por cliente, não por host: falhas de um site contam no circuit
 | --- | --- |
 | Caminho proibido pelo robots.txt (`RobotsDisallowedException`) | Página `BlockedByRobots` (artigo `LeadOnly`) ou feed com falha reportada |
 | Erro de rede, timeout, circuito aberto, resposta grande demais, status não 2xx | Falha da página ou do feed; a execução continua |
+| URL sem HTTPS, host sem endereço público, mais de 5 redirecionamentos | Falha da página ou do feed; a execução continua |
 | Cancelamento por desligamento | Propaga, e a execução vira `Interrupted` |
 
-Nos testes, o `StubHttpClientFactory` (em `ArticleMonitor.Sources.Tests`) devolve um `HttpClient` com respostas falsas no lugar de todo esse pipeline.
+Nos testes dos módulos, o `StubHttpClientFactory` (em `ArticleMonitor.Sources.Tests`) devolve um `HttpClient` com respostas falsas no lugar de todo esse pipeline. O pipeline em si é testado em `CollectorHttpPipelineTests`, com a composição real da Infrastructure e só a rede trocada por um stub.

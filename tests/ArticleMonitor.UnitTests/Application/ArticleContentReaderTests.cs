@@ -1,13 +1,17 @@
 using ArticleMonitor.Application.Collection;
 using ArticleMonitor.Application.Extraction;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 
 namespace ArticleMonitor.UnitTests.Application;
 
 public class ArticleContentReaderTests
 {
     private static readonly Uri PageUrl = new("https://news.example/a");
+
+    private readonly FakeTimeProvider _clock = new();
+    private readonly RecordingLogger<ArticleContentReader> _logger = new();
 
     [Fact]
     public void Uses_the_module_extractor_when_it_gets_enough_text()
@@ -53,9 +57,38 @@ public class ArticleContentReaderTests
         Assert.False(reading.UsedFallback);
     }
 
-    private static ArticleContentReader Reader(int minExtractedChars = 10) =>
+    [Fact]
+    public void Warns_about_a_slow_extraction()
+    {
+        Reader().Read(new SlowExtractor(_clock, TimeSpan.FromSeconds(3)), "text:conteúdo completo", PageUrl);
+
+        var warning = Assert.Single(_logger.Entries, entry => entry.Level == LogLevel.Warning);
+        Assert.Contains(nameof(SlowExtractor), warning.Message, StringComparison.Ordinal);
+        Assert.Contains(PageUrl.ToString(), warning.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Does_not_warn_about_a_fast_extraction()
+    {
+        Reader().Read(new SlowExtractor(_clock, TimeSpan.FromMilliseconds(1999)), "text:conteúdo completo", PageUrl);
+
+        Assert.Empty(_logger.Entries);
+    }
+
+    private ArticleContentReader Reader(int minExtractedChars = 10) =>
         new(
             new PrefixExtractor("fallback:"),
             Options.Create(new CollectionOptions { MinExtractedChars = minExtractedChars }),
-            NullLogger<ArticleContentReader>.Instance);
+            _clock,
+            _logger);
+
+    /// <summary>Reads like <see cref="PrefixExtractor"/>, taking the given time on the fake clock.</summary>
+    private sealed class SlowExtractor(FakeTimeProvider clock, TimeSpan duration) : IArticleContentExtractor
+    {
+        public ExtractionResult Extract(string html, Uri pageUrl)
+        {
+            clock.Advance(duration);
+            return new PrefixExtractor().Extract(html, pageUrl);
+        }
+    }
 }

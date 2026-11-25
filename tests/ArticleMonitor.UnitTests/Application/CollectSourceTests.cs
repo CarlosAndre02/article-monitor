@@ -295,7 +295,7 @@ public class CollectSourceTests
     private CollectSource CreateUseCase()
     {
         var options = Options.Create(_options);
-        var reader = new ArticleContentReader(_fallback, options, NullLogger<ArticleContentReader>.Instance);
+        var reader = new ArticleContentReader(_fallback, options, _clock, NullLogger<ArticleContentReader>.Instance);
         var ingestor = new ArticleIngestor(_pages, reader, _articles, _clock);
         var harvester = new SourceHarvester(_articles, ingestor, options, _clock);
         return new CollectSource(harvester, _runs, new FakeUnitOfWork(), _clock, options, _logger);
