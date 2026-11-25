@@ -1,7 +1,6 @@
 using ArticleMonitor.Application.Extraction;
-using Xunit;
 
-namespace ArticleMonitor.Sources.Testing;
+namespace ArticleMonitor.Sources.Tests.Contracts;
 
 /// <summary>
 /// Rules every <see cref="IArticleContentExtractor"/> must follow. A source module's test project inherits this

@@ -183,7 +183,8 @@ dotnet stryker --test-runner mtp --project ArticleMonitor.Domain.csproj --output
 | --- | --- |
 | `CanonicalUrlTests` | Normalização de URL, rejeição de URLs inválidas, mesmo hash para links do mesmo artigo e verificação do host da fonte |
 | `CanonicalUrlPropertyTests` | **Property-based** (CsCheck): para URLs geradas, normalizar é idempotente, e parâmetros de rastreamento, ordem da query, caixa do host, fragmento e espaços não mudam a identidade |
-| `DependencyRuleTests` | **Arquitetura**: cada camada só referencia as permitidas, o Domain só usa a biblioteca base, a Application não usa rede, banco ou biblioteca de site, e um módulo de fonte não depende de outro. Novos módulos entram na verificação sem alterar o teste |
+| `DependencyRuleTests` | **Arquitetura**: cada camada só referencia as permitidas, o Domain só usa a biblioteca base, e a Application não usa rede, banco ou biblioteca de site. Novos projetos entram na verificação sem alterar o teste |
+| `SourceIsolationTests` | **Arquitetura** (ArchUnitNET): os módulos de fonte dividem um projeto, então o compilador não os separa. Lendo as dependências do código compilado, inclusive dentro dos métodos, garante que um módulo só usa a si mesmo e o `Common`, e que o `Common` não usa nenhum módulo |
 | `SourceTests` | A marca d'água só avança, uma execução com falha não altera a fonte, e chaves são normalizadas e validadas |
 | `CollectionRunTests` | Ciclo de vida da execução: status final, contadores, resumo de erros truncado, impossibilidade de fechar duas vezes e limite do alerta de conteúdo degradado |
 | `CollectionScheduleTests` | Próximo e último horário, fuso configurado, virada de dia, execução iniciada exatamente no horário, e vários horários perdidos resultando em uma só coleta |
@@ -193,7 +194,11 @@ dotnet stryker --test-runner mtp --project ArticleMonitor.Domain.csproj --output
 | `RobotsTxtPolicyTests` | Interpretação do `robots.txt`: regra mais longa vence, `Allow` vence empate, grupos por user-agent e comentários |
 | `CollectionSchedulerTests` | Recuperação ao iniciar, espera pelo próximo horário, máquina suspensa e nova tentativa quando o banco não está pronto |
 
-### `ArticleMonitor.Sources.Testing`
+### `ArticleMonitor.Sources.Tests`
+
+Uma pasta por módulo de fonte, com suas fixtures, mais a pasta `Contracts/`.
+
+#### `Contracts/`
 
 Testes de **contrato** que todo módulo de fonte herda. Não rodam sozinhos: cada módulo fornece sua implementação e suas fixtures.
 
@@ -204,7 +209,7 @@ Testes de **contrato** que todo módulo de fonte herda. Não rodam sozinhos: cad
 
 É isso que permite adicionar uma fonte sem revisar o núcleo: se o módulo passa no contrato, a regra de parada e o restante da coleta funcionam com ele.
 
-### `ArticleMonitor.Sources.G1.Tests`
+#### `G1/`
 
 Herda os testes de contrato e adiciona o que é específico do G1.
 

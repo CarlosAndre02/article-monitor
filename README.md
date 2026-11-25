@@ -35,7 +35,7 @@ dotnet test --project tests/ArticleMonitor.UnitTests --filter-method "*Stops_at_
 | Suite | Covers | Needs |
 | --- | --- | --- |
 | `ArticleMonitor.UnitTests` | Domain rules, URL properties, architecture rules, use cases with fakes of the contracts, robots.txt parsing, scheduler | Nothing |
-| `ArticleMonitor.Sources.G1.Tests` | G1 discovery and extraction on synthetic fixtures, plus the inherited contract tests | Nothing |
+| `ArticleMonitor.Sources.Tests` | Each source module's discovery and extraction on synthetic fixtures, plus the contract tests every module inherits | Nothing |
 | `ArticleMonitor.IntegrationTests` | Repositories and full collection cycles on SQL Server 2025 | Docker |
 
 The integration tests start their own SQL Server container (Testcontainers) and create a fresh database per test; they never touch the Docker Compose database. The first run pulls the SQL Server image, which takes a few minutes.
@@ -68,24 +68,24 @@ src/
                                    IArticleContentExtractor, IPageFetcher, repositories)
   ArticleMonitor.Infrastructure/   EF Core + SQL Server persistence and the shared HTTP pipeline
                                    (resilience, per-host rate limit, robots.txt, response size limit)
-  ArticleMonitor.Sources.Common/   Reusable building blocks for source modules (RSS discoverer, generic readability extractor)
-  ArticleMonitor.Sources.G1/       G1 source module: definition (host, language, feeds) and G1-specific extractor
+  ArticleMonitor.Sources/          Source modules, one folder each
+    Common/                        Reusable building blocks (RSS discoverer, generic readability extractor)
+    G1/                            G1 module: definition (host, language, feeds) and G1-specific extractor
   ArticleMonitor.Worker/           Composition root and the scheduled collection service
 tests/
   ArticleMonitor.UnitTests/        Domain and Application, using fakes of the contracts
-  ArticleMonitor.Sources.Testing/  Contract tests every source module inherits
-  ArticleMonitor.Sources.G1.Tests/ G1 fixtures plus the inherited contract tests
+  ArticleMonitor.Sources.Tests/    Contract tests every source module inherits (Contracts/), plus one folder per module
   ArticleMonitor.IntegrationTests/ Full collection cycle against SQL Server (Testcontainers)
 ```
 
-Dependency rule: `Domain ← Application ← Infrastructure, Sources.* ← Worker`. The Application layer never references I/O or site-specific code.
+Dependency rule: `Domain ← Application ← Infrastructure, Sources ← Worker`. The Application layer never references I/O or site-specific code.
 
 ### Adding a news source
 
-Each source is an isolated module (`ArticleMonitor.Sources.<Name>`) that implements `ISourceModule` and registers itself with one extension method (e.g. `AddG1Source()`) in the Worker. A new source needs:
+Each source is an isolated module (a `Sources/<Name>` folder, namespace `ArticleMonitor.Sources.<Name>`) that implements `ISourceModule` and registers itself with one extension method (e.g. `AddG1Source()`) in the Worker. A new source needs:
 
-1. A `Sources.<Name>` project with its discoverer and extractor.
-2. A `Sources.<Name>.Tests` project that inherits the contract tests from `Sources.Testing`.
+1. A `Sources/<Name>` folder with its discoverer and extractor.
+2. A `Sources.Tests/<Name>` folder with tests that inherit the contract tests from `Contracts/`.
 3. One registration line in the Worker.
 
-Existing modules and the core stay untouched, so their tests keep guarding what already works. Robots.txt, rate limiting and resilience live in the shared HTTP pipeline, so no module can bypass them. Details in [docs/sources.md](docs/sources.md).
+Existing modules and the core stay untouched, so their tests keep guarding what already works. Modules share one project so the number of projects does not grow with the sources; an architecture test, instead of the compiler, fails when a module uses another one. Robots.txt, rate limiting and resilience live in the shared HTTP pipeline, so no module can bypass them. Details in [docs/sources.md](docs/sources.md).

@@ -1,7 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <ProjectReference Include="..\ArticleMonitor.Sources.Common\ArticleMonitor.Sources.Common.csproj" />
-  </ItemGroup>
-
-</Project>

@@ -1,4 +1,6 @@
-namespace ArticleMonitor.Sources.G1.Tests;
+using ArticleMonitor.Sources.G1;
+
+namespace ArticleMonitor.Sources.Tests.G1;
 
 public class G1SourceModuleTests
 {

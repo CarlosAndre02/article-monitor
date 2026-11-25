@@ -182,4 +182,4 @@ O pipeline é um por cliente, não por host: falhas de um site contam no circuit
 | Erro de rede, timeout, circuito aberto, resposta grande demais, status não 2xx | Falha da página ou do feed; a execução continua |
 | Cancelamento por desligamento | Propaga, e a execução vira `Interrupted` |
 
-Nos testes, o `StubHttpClientFactory` (em `ArticleMonitor.Sources.Testing`) devolve um `HttpClient` com respostas falsas no lugar de todo esse pipeline.
+Nos testes, o `StubHttpClientFactory` (em `ArticleMonitor.Sources.Tests`) devolve um `HttpClient` com respostas falsas no lugar de todo esse pipeline.

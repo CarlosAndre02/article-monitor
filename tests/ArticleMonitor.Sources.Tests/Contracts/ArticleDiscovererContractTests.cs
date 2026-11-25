@@ -1,8 +1,7 @@
 using System.Net;
 using ArticleMonitor.Application.Discovery;
-using Xunit;
 
-namespace ArticleMonitor.Sources.Testing;
+namespace ArticleMonitor.Sources.Tests.Contracts;
 
 /// <summary>
 /// Rules every <see cref="IArticleDiscoverer"/> must follow. A source module's test project inherits this class

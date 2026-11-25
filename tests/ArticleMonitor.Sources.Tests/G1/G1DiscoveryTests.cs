@@ -1,9 +1,10 @@
 using System.Net;
 using System.Text;
 using ArticleMonitor.Application.Discovery;
-using ArticleMonitor.Sources.Testing;
+using ArticleMonitor.Sources.G1;
+using ArticleMonitor.Sources.Tests.Contracts;
 
-namespace ArticleMonitor.Sources.G1.Tests;
+namespace ArticleMonitor.Sources.Tests.G1;
 
 public class G1DiscoveryTests : ArticleDiscovererContractTests
 {

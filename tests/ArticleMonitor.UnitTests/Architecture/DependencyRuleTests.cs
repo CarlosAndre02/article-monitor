@@ -4,7 +4,7 @@ namespace ArticleMonitor.UnitTests.Architecture;
 
 /// <summary>
 /// Checks the references compiled into each assembly. Projects are discovered from the build output, so a new
-/// source module is covered as soon as the Worker references it.
+/// project is covered as soon as the Worker references it.
 /// </summary>
 public class DependencyRuleTests
 {
@@ -12,8 +12,7 @@ public class DependencyRuleTests
     private const string DomainProject = "ArticleMonitor.Domain";
     private const string ApplicationProject = "ArticleMonitor.Application";
     private const string InfrastructureProject = "ArticleMonitor.Infrastructure";
-    private const string SourcesCommonProject = "ArticleMonitor.Sources.Common";
-    private const string SourceModulePrefix = "ArticleMonitor.Sources.";
+    private const string SourcesProject = "ArticleMonitor.Sources";
     private const string WorkerProject = "ArticleMonitor.Worker";
     private const string TestsProject = "ArticleMonitor.UnitTests";
 
@@ -37,9 +36,8 @@ public class DependencyRuleTests
         var projects = ProjectNames();
 
         Assert.Superset(
-            new HashSet<string> { DomainProject, ApplicationProject, InfrastructureProject, SourcesCommonProject },
+            new HashSet<string> { DomainProject, ApplicationProject, InfrastructureProject, SourcesProject },
             projects.ToHashSet());
-        Assert.Contains(projects, IsSourceModule);
     }
 
     [Theory]
@@ -69,13 +67,9 @@ public class DependencyRuleTests
     {
         DomainProject => [],
         ApplicationProject => [DomainProject],
-        InfrastructureProject or SourcesCommonProject => [ApplicationProject, DomainProject],
-        _ when IsSourceModule(project) => [SourcesCommonProject, ApplicationProject, DomainProject],
+        InfrastructureProject or SourcesProject => [ApplicationProject, DomainProject],
         _ => throw new InvalidOperationException($"Define the dependency rule of {project}."),
     };
-
-    private static bool IsSourceModule(string project) =>
-        project.StartsWith(SourceModulePrefix, Ordinal) && project != SourcesCommonProject;
 
     private static bool IsNetworkOrDatabaseLibrary(string reference) =>
         reference.StartsWith("System.Net.", Ordinal) || reference.StartsWith("System.Data", Ordinal);

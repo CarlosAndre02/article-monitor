@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 
-namespace ArticleMonitor.Sources.Testing;
+namespace ArticleMonitor.Sources.Tests;
 
 /// <summary>Answers requests from registered routes and records what was requested.</summary>
 public sealed class StubHttpHandler : HttpMessageHandler

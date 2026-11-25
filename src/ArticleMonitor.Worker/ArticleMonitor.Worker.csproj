@@ -7,8 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ArticleMonitor.Application\ArticleMonitor.Application.csproj" />
     <ProjectReference Include="..\ArticleMonitor.Infrastructure\ArticleMonitor.Infrastructure.csproj" />
-    <ProjectReference Include="..\ArticleMonitor.Sources.Common\ArticleMonitor.Sources.Common.csproj" />
-    <ProjectReference Include="..\ArticleMonitor.Sources.G1\ArticleMonitor.Sources.G1.csproj" />
+    <ProjectReference Include="..\ArticleMonitor.Sources\ArticleMonitor.Sources.csproj" />
   </ItemGroup>
 
   <ItemGroup>
