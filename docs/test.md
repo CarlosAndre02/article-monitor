@@ -175,7 +175,7 @@ dotnet stryker --test-runner mtp --project ArticleMonitor.Domain.csproj --output
 - **Fakes dos contratos:** os testes da Application não usam biblioteca de mock. Os fakes ficam em [Fakes.cs](../tests/ArticleMonitor.UnitTests/Application/Fakes.cs).
 - **Fixtures sintéticas:** reproduzem a estrutura real dos sites com texto próprio, porque o texto das matérias tem direitos autorais ([detalhes](sources.md#fixtures)).
 - **Banco isolado:** um container SQL Server por execução e um banco novo por teste, com as migrations reais aplicadas. O banco do Docker Compose nunca é tocado.
-- **Sem sites reais:** nenhum teste acessa os portais de notícias, então nenhum falha porque um site saiu do ar.
+- **Sites reais só quando pedidos:** os testes que acessam os portais de notícias ficam em `ArticleMonitor.LiveTests` e são `Explicit`. O `dotnet test` os pula, então nenhum teste da suíte normal falha porque um site saiu do ar.
 
 ### `ArticleMonitor.UnitTests`
 
@@ -189,10 +189,13 @@ dotnet stryker --test-runner mtp --project ArticleMonitor.Domain.csproj --output
 | `CollectionRunTests` | Ciclo de vida da execução: status final, contadores, resumo de erros truncado, impossibilidade de fechar duas vezes e limite do alerta de conteúdo degradado |
 | `CollectionScheduleTests` | Próximo e último horário, fuso configurado, virada de dia, execução iniciada exatamente no horário, e vários horários perdidos resultando em uma só coleta |
 | `DiscoveryStopPolicyTests` | Limite de data, sequência de conhecidos (só os cobertos por execuções concluídas), teto de itens, artigos sem data e detecção de possível lacuna |
-| `ArticleContentReaderTests` | Ordem dos extratores: módulo, fallback genérico e falha, incluindo extrator que lança exceção |
-| `CollectSourceTests` | Caso de uso completo com fakes: duplicatas entre feeds, links de outro host, página com erro, robots, falha de um feed, execução interrompida, erro inesperado, fim da leitura da listagem ao parar, coleta do que uma execução não concluída deixou para trás, preservação da marca d'água e emissão do alerta de conteúdo degradado |
+| `ArticleContentReaderTests` | Ordem dos extratores: módulo, fallback genérico e falha, incluindo extrator que lança exceção, e aviso de extração lenta |
+| `CollectSourceTests` | Caso de uso completo com fakes: escopo de log com fonte e execução, duplicatas entre feeds, links de outro host, página com erro, robots, falha de um feed, execução interrompida, erro inesperado, fim da leitura da listagem ao parar, coleta do que uma execução não concluída deixou para trás, preservação da marca d'água e emissão do alerta de conteúdo degradado |
+| `CollectorHttpPipelineTests` | Pipeline HTTP real, só com a rede trocada por um stub: redirecionamento passando de novo pelo pipeline (incluindo o robots.txt do destino), recusa de HTTP simples, limite de saltos, limite de tamanho da página de artigo e circuit breaker separado por host |
+| `PublicNetworkConnectorTests` | Faixas de endereço recusadas (loopback, redes privadas, link-local, metadados de nuvem, IPv6 local) e nenhuma conexão com a própria máquina |
 | `RobotsTxtPolicyTests` | Interpretação do `robots.txt`: regra mais longa vence, `Allow` vence empate, grupos por user-agent e comentários |
 | `CollectionSchedulerTests` | Recuperação ao iniciar, espera pelo próximo horário, máquina suspensa e nova tentativa quando o banco não está pronto |
+| `ArticlesCommandTests` | Comando `articles`: limites de N, saída com link e texto, e remoção de sequências de escape e controles bidi vindos das fontes |
 
 ### `ArticleMonitor.Sources.Tests`
 
@@ -225,8 +228,26 @@ Usa a composição real da aplicação no SQL Server 2025. Só a fonte, as pági
 
 | Classe | O que protege |
 | --- | --- |
-| `ArticleRepositoryTests` | Busca de artigos existentes por hash, inserções concorrentes do mesmo artigo e texto íntegro após a compressão Brotli |
+| `ArticleRepositoryTests` | Busca de artigos existentes por hash, inserções concorrentes do mesmo artigo, texto íntegro após a compressão Brotli e listagem dos últimos artigos gravados |
 | `CollectionCycleTests` | Registro único dos módulos, execuções presas viram `Interrupted`, ciclo de recuperação completo, fonte desativada, nenhuma coleta antes do próximo horário e segundo ciclo sem novos artigos |
+
+### `ArticleMonitor.LiveTests`
+
+Testes de **contrato ao vivo**: os módulos de fonte contra os sites reais, pelo pipeline HTTP real (robots.txt, rate limit, HTTPS, só endereços públicos). Pegam o que as fixtures não pegam: o site mudou os feeds, o HTML ou o robots.txt.
+
+| Classe | O que protege |
+| --- | --- |
+| `G1LiveTests` | Cada feed responde e lista artigos com URL HTTPS no G1, título e data; o extrator do G1 lê os 3 artigos mais recentes com pelo menos `MinExtractedChars` caracteres e sem cair no genérico |
+
+- **Só estrutura:** nunca conferem um artigo específico, porque as matérias mudam todo dia. O texto baixado não é gravado.
+- **Educados:** poucas requisições (uns 10 s no G1), com o mesmo User-Agent e as mesmas regras do worker.
+- **Explícitos:** compilam com a solução, então não ficam desatualizados, mas só rodam quando pedidos:
+
+```bash
+dotnet test --project tests/ArticleMonitor.LiveTests -- --explicit only
+```
+
+Rode ao alterar um extrator, um discoverer ou o pipeline HTTP, e quando o alerta de conteúdo degradado aparecer. Uma falha diz a URL e o motivo, por exemplo `extraction failed (G1 article body not found.)`. Assim dá para separar um site que mudou de uma rede fora do ar.
 
 ### Regressões protegidas
 
@@ -247,9 +268,9 @@ O fallback entra na conta porque, após uma mudança de layout, o extrator gené
 
 ### Verificação manual contra o G1 real
 
-E2E e smoke ficam fora de `dotnet test`, porque dependem de rede e de um conteúdo que muda sozinho. Vale repetir este roteiro ao alterar o pipeline de coleta ou um extrator:
+Os testes ao vivo cobrem as fontes, mas não o worker inteiro com o banco e a agenda. Esse E2E e o smoke ficam fora de `dotnet test`, porque dependem de rede e de um conteúdo que muda sozinho. Vale repetir este roteiro ao alterar o pipeline de coleta ou um extrator:
 
 1. Com o ambiente do [Setup](../README.md#setup) pronto e o banco vazio, rode o worker. **Smoke:** ele sobe e registra uma execução por fonte em `CollectionRuns`.
-2. **Primeira coleta:** o gatilho é `CatchUp`, há artigos em `Added` e nenhuma falha. Compare o texto de três artigos com a página no navegador.
+2. **Primeira coleta:** o gatilho é `CatchUp`, há artigos em `Added` e nenhuma falha. Compare o texto de três artigos com a página no navegador (`dotnet run --project src/ArticleMonitor.Worker -- articles 3`).
 3. **Reinício:** pare e suba o worker de novo. Nenhuma coleta deve rodar antes do próximo horário.
 4. **Máquina desligada:** com o worker parado, recue `LastCompletedRunStartedAt` da fonte para o dia anterior e suba o worker. Deve haver um único `CatchUp`, sem artigos duplicados e com `PossibleGap = false`.

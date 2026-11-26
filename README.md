@@ -30,6 +30,7 @@ dotnet test                                                                     
 dotnet test --project tests/ArticleMonitor.UnitTests                            # one suite
 dotnet test --project tests/ArticleMonitor.UnitTests --filter-class "*DiscoveryStopPolicyTests"
 dotnet test --project tests/ArticleMonitor.UnitTests --filter-method "*Stops_at_known_articles*"
+dotnet test --project tests/ArticleMonitor.LiveTests -- --explicit only         # against the real sites
 ```
 
 | Suite | Covers | Needs |
@@ -37,6 +38,7 @@ dotnet test --project tests/ArticleMonitor.UnitTests --filter-method "*Stops_at_
 | `ArticleMonitor.UnitTests` | Domain rules, URL properties, architecture rules, use cases with fakes of the contracts, robots.txt parsing, scheduler | Nothing |
 | `ArticleMonitor.Sources.Tests` | Each source module's discovery and extraction on synthetic fixtures, plus the contract tests every module inherits | Nothing |
 | `ArticleMonitor.IntegrationTests` | Repositories and full collection cycles on SQL Server 2025 | Docker |
+| `ArticleMonitor.LiveTests` | Each source module against the real site, through the real HTTP pipeline. Explicit: `dotnet test` skips them | Internet |
 
 The integration tests start their own SQL Server container (Testcontainers) and create a fresh database per test; they never touch the Docker Compose database. The first run pulls the SQL Server image, which takes a few minutes.
 

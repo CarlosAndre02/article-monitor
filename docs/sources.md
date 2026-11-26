@@ -32,7 +32,8 @@ Blocos prontos em `Common/` (namespace `ArticleMonitor.Sources.Common`):
 2. Implementar `CnnBrasilSourceModule : ISourceModule`. Se a fonte tiver RSS, usar o `RssDiscoverer`; senão, escrever um discoverer paginado que siga o contrato. Escrever um extrator específico só se o genérico não bastar.
 3. Criar a extensão `AddCnnBrasilSource()`, com `services.AddSingleton<ISourceModule, CnnBrasilSourceModule>()`, e chamá-la no `Program.cs` do Worker.
 4. Criar a pasta `tests/ArticleMonitor.Sources.Tests/CnnBrasil`, com as fixtures em `CnnBrasil/Fixtures`, classes que herdam `ArticleDiscovererContractTests` e `ArticleContentExtractorContractTests`, e os testes específicos da fonte.
-5. Rodar `dotnet test`.
+5. Registrar o módulo no `LiveSources` (`.AddCnnBrasilSource()`) e criar `tests/ArticleMonitor.LiveTests/CnnBrasilLiveTests.cs`, seguindo o `G1LiveTests`: cada listagem responde com artigos válidos, e o extrator lê os artigos mais recentes sem cair no genérico.
+6. Rodar `dotnet test` e os testes ao vivo ([test.md](test.md#articlemonitorlivetests)).
 
 Ao iniciar, o Worker cria a linha da fonte nova no banco. Não precisa de migration.
 
@@ -40,7 +41,7 @@ Ao iniciar, o Worker cria a linha da fonte nova no banco. Não precisa de migrat
 
 As fixtures são sintéticas: reproduzem a estrutura real do site (HTML, XML) com texto próprio. O texto das matérias tem direitos autorais e não deve ser versionado.
 
-Antes de escrever as fixtures, valide o discoverer e o extrator contra feeds e páginas reais, fora do repositório.
+Antes de escrever as fixtures, valide o discoverer e o extrator contra o site real com os testes ao vivo. Eles conferem a estrutura sem gravar o texto em lugar nenhum.
 
 ## Desativar uma fonte
 
