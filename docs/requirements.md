@@ -99,6 +99,16 @@ O banco ocupa no máximo 1 GB. A retenção é por tempo, e não pelos "N últim
 - Os metadados não podem ficar para sempre: crescem ~180 MB por ano e acabariam estourando a meta. A deduplicação só precisa do hash enquanto o artigo pode reaparecer num feed.
 - A estimativa de tamanho por artigo está em [analyses/stack-dotnet.md](adr/analyses/stack-dotnet.md#armazenamento).
 
+### R9. Operação
+
+O worker roda sozinho, sem ninguém acompanhando. Um problema precisa ser percebido sem que alguém vá procurá-lo.
+
+Critérios de aceite:
+- Os logs sobrevivem ao fim do processo, e os de uma execução são encontrados a partir da linha dela em `CollectionRuns` ([observability.md](observability.md)).
+- Uma falha que pede ação chega a uma pessoa sem que ela abra os logs: execução com falha ou possível lacuna, conteúdo degradado e robots.txt inacessível. O aviso vai por webhook do Discord e leva a fonte e os contadores, nunca título ou trecho de matéria, que são texto não confiável (R6).
+- Sem webhook configurado, o worker roda normalmente, sem avisos.
+- Na nuvem, um worker parado também gera aviso. Só um verificador externo, que estranha a falta de sinal do worker, consegue isso. Rodando local, a máquina desligada é o caso normal, e a recuperação ao iniciar já cobre a coleta perdida.
+
 ## Métricas
 
 | Métrica | Onde observar | Meta |

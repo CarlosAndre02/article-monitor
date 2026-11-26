@@ -6,6 +6,8 @@ using ArticleMonitor.Worker;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.AddTelemetry();
+
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration)

@@ -133,7 +133,13 @@ internal sealed class RecordingLogger<T> : ILogger<T>
 {
     public List<(LogLevel Level, string Message)> Entries { get; } = [];
 
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+    public List<object> Scopes { get; } = [];
+
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+    {
+        Scopes.Add(state);
+        return null;
+    }
 
     public bool IsEnabled(LogLevel logLevel) => true;
 

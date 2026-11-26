@@ -283,6 +283,17 @@ public class CollectSourceTests
     }
 
     [Fact]
+    public async Task Logs_during_a_run_carry_the_source_and_the_run()
+    {
+        var run = await CreateUseCase().ExecuteAsync(NewSource(), Module([Listed("a", Now)]), RunTrigger.Scheduled, Ct);
+
+        var scope = Assert.IsAssignableFrom<IEnumerable<KeyValuePair<string, object?>>>(
+            Assert.Single(_logger.Scopes));
+        Assert.Contains(new KeyValuePair<string, object?>("Source", "fake"), scope);
+        Assert.Contains(new KeyValuePair<string, object?>("RunId", run.Id), scope);
+    }
+
+    [Fact]
     public async Task Does_not_warn_when_the_source_extractor_reads_the_articles()
     {
         var listing = new[] { "a", "b", "c", "d", "e" }.Select(slug => Listed(slug, Now)).ToList();

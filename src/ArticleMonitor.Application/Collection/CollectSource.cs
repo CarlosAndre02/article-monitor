@@ -26,6 +26,18 @@ public sealed partial class CollectSource(
         runs.Add(run);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Every log written during the run, by any class, carries the source and the run.
+        using (RunScope(logger, source.Key.Value, run.Id))
+        {
+            await CollectAsync(source, module, run, cancellationToken);
+        }
+
+        return run;
+    }
+
+    private async Task CollectAsync(
+        Source source, ISourceModule module, CollectionRun run, CancellationToken cancellationToken)
+    {
         try
         {
             var harvest = await harvester.HarvestAsync(new HarvestScope(source, module, run), cancellationToken);
@@ -48,7 +60,6 @@ public sealed partial class CollectSource(
         await unitOfWork.SaveChangesAsync(CancellationToken.None);
         LogRunFinished(logger, source.Key.Value, run.Status, run.StopReason, run.Added, run.Duplicates, run.Failures);
         WarnIfContentDegraded(source, run);
-        return run;
     }
 
     private void WarnIfContentDegraded(Source source, CollectionRun run)
@@ -70,6 +81,9 @@ public sealed partial class CollectSource(
 
         source.CompleteRun(run.StartedAt, harvest.NewestPublishedAt, harvest.DiscoveryState);
     }
+
+    private static readonly Func<ILogger, string, long, IDisposable?> RunScope =
+        LoggerMessage.DefineScope<string, long>("Collection of {Source}, run {RunId}");
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Collection of {Source} aborted by an unexpected error")]
     private static partial void LogRunAborted(ILogger logger, Exception exception, string source);

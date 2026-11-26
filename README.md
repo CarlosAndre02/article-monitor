@@ -10,8 +10,8 @@
 ## Setup
 
 ```bash
-cp .env.example .env    # then set MSSQL_SA_PASSWORD
-docker compose up -d    # SQL Server on 127.0.0.1:1433 only
+cp .env.example .env    # then set MSSQL_SA_PASSWORD and SEQ_ADMIN_PASSWORD
+docker compose up -d    # SQL Server on 127.0.0.1:1433 and Seq on 127.0.0.1:5341, local only
 dotnet tool restore     # dotnet-ef
 
 dotnet user-secrets set "ConnectionStrings:ArticleMonitor" \
@@ -49,6 +49,8 @@ dotnet run --project src/ArticleMonitor.Worker
 ```
 
 The worker collects at the times in `Collector:Schedule` (`appsettings.json`). When it starts and a scheduled time passed while it was off, it collects once right away. Every run is recorded in the `CollectionRuns` table: counters, why discovery stopped, a possible-gap flag and errors.
+
+In Development the logs also go to Seq, at http://localhost:5341. Every log of a run carries its `RunId`, the `Id` in `CollectionRuns` ([docs/observability.md](docs/observability.md)).
 
 ```bash
 docker compose exec sqlserver /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d ArticleMonitor \
@@ -99,4 +101,5 @@ Existing modules and the core stay untouched, so their tests keep guarding what 
 | [docs/features/](docs/features/) | How each feature works: its business rules, step by step in execution order |
 | [docs/project.md](docs/project.md) | Domain model shared by the features: entities, value objects and invariants |
 | [docs/sources.md](docs/sources.md) | How to add a news source |
+| [docs/observability.md](docs/observability.md) | Logs: what they carry, where they go and how to search them |
 | [docs/test.md](docs/test.md) | Test strategy and what each suite protects |
