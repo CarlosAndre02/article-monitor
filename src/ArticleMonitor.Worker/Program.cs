@@ -14,6 +14,13 @@ builder.Services
     .AddSourcesCommon()
     .AddG1Source();
 
+if (ArticlesCommand.IsInvoked(args))
+{
+    using var host = builder.Build();
+    return await ArticlesCommand.RunAsync(host.Services, args, Console.Out, Console.Error);
+}
+
 builder.Services.AddHostedService<CollectionScheduler>();
 
 await builder.Build().RunAsync();
+return 0;

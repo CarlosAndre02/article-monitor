@@ -1,4 +1,5 @@
 using System.Net;
+using ArticleMonitor.Application.Articles;
 using ArticleMonitor.Application.Http;
 using ArticleMonitor.Application.Pages;
 using ArticleMonitor.Application.Persistence;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<ISourceRepository, SourceRepository>();
         services.AddScoped<IArticleRepository, ArticleRepository>();
         services.AddScoped<ICollectionRunRepository, CollectionRunRepository>();
+        services.AddScoped<IArticleQueries, ArticleQueries>();
         return services;
     }
 

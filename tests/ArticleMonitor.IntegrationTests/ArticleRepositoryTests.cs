@@ -50,6 +50,23 @@ public class ArticleRepositoryTests(SqlServerFixture sql)
         Assert.Equal(text, await app.WithDbAsync(db => db.Articles.Select(article => article.Content).SingleAsync(Ct)));
     }
 
+    [Fact]
+    public async Task Lists_the_latest_articles_newest_first_with_their_text()
+    {
+        await using var app = await TestApplication.StartAsync(sql, Ct);
+        var sourceId = await RegisterSourceAsync(app);
+        foreach (var slug in new[] { "a", "b", "c" })
+        {
+            var article = NewArticle(sourceId, slug, $"Texto {slug}.");
+            await app.WithDbAsync(db => new ArticleRepository(db).TryAddAsync(article, Ct));
+        }
+
+        var latest = await app.WithDbAsync(db => new ArticleQueries(db).ListLatestAsync(2, Ct));
+
+        Assert.Equal(["Título c", "Título b"], latest.Select(article => article.Title));
+        Assert.Equal(("fake", "Texto c."), (latest[0].Source, latest[0].Content));
+    }
+
     private static async Task<int> RegisterSourceAsync(TestApplication app) =>
         await app.WithDbAsync(async (ArticleMonitorDbContext db) =>
         {

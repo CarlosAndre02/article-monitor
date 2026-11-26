@@ -50,12 +50,18 @@ dotnet run --project src/ArticleMonitor.Worker
 
 The worker collects at the times in `Collector:Schedule` (`appsettings.json`). When it starts and a scheduled time passed while it was off, it collects once right away. Every run is recorded in the `CollectionRuns` table: counters, why discovery stopped, a possible-gap flag and errors.
 
-In Development the logs also go to Seq, at http://localhost:5341. Every log of a run carries its `RunId`, the `Id` in `CollectionRuns` ([docs/observability.md](docs/observability.md)).
-
 ```bash
 docker compose exec sqlserver /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d ArticleMonitor \
   -Q "SELECT TOP 5 Id, [Trigger], Status, StopReason, PossibleGap, Added, Duplicates, Failures FROM CollectionRuns ORDER BY Id DESC"
 ```
+
+To check what was extracted, print the latest stored articles with their link and text, then compare them with the page in the browser. The text is compressed in the database, so plain SQL cannot show it.
+
+```bash
+dotnet run --project src/ArticleMonitor.Worker -- articles 5    # N from 1 to 50, default 5
+```
+
+In Development the logs also go to Seq, at http://localhost:5341. Every log of a run carries its `RunId`, the `Id` in `CollectionRuns` ([docs/observability.md](docs/observability.md)).
 
 ## How to deploy
 
